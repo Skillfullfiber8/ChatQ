@@ -1,5 +1,8 @@
 import qrcode from "qrcode-terminal";
 
+import puppeteer
+from "puppeteer";
+
 import {
 
   Client,
@@ -17,137 +20,133 @@ export let isWhatsappReady =
   false;
 
 // WhatsApp Client
-export const whatsappClient =
-  new Client({
+export let whatsappClient:
+  Client;
 
-    authStrategy:
-      new LocalAuth(),
+// INITIALIZE CLIENT
+export const initializeWhatsapp =
+  async () => {
 
-    puppeteer: {
+    const executablePath =
+      await puppeteer.executablePath();
 
-      headless: true,
+    whatsappClient =
+      new Client({
 
-      channel: "chrome",
+        authStrategy:
+          new LocalAuth(),
 
-      args: [
+        puppeteer: {
 
-        "--no-sandbox",
+          executablePath,
 
-        "--disable-setuid-sandbox",
+          headless: true,
 
-        "--disable-dev-shm-usage",
+          args: [
 
-        "--disable-gpu",
+            "--no-sandbox",
 
-      ],
+            "--disable-setuid-sandbox",
 
-    },
+            "--disable-dev-shm-usage",
 
-  });
+            "--disable-gpu",
 
-// QR EVENT
-whatsappClient.on(
+          ],
 
-  "qr",
+        },
 
-  (qr) => {
+      });
 
-    latestQr = qr;
+    // QR EVENT
+    whatsappClient.on(
 
-    isWhatsappReady = false;
+      "qr",
 
-    console.log(
-      "[INFO] Scan QR Code Below:"
-    );
+      (qr) => {
 
-    qrcode.generate(
-      qr,
-      {
-        small: true,
+        latestQr = qr;
+
+        isWhatsappReady = false;
+
+        console.log(
+          "[INFO] Scan QR Code Below:"
+        );
+
+        qrcode.generate(
+          qr,
+          {
+            small: true,
+          }
+        );
       }
     );
-  }
-);
 
-// AUTHENTICATED
-whatsappClient.on(
+    // AUTHENTICATED
+    whatsappClient.on(
 
-  "authenticated",
+      "authenticated",
 
-  () => {
+      () => {
 
-    console.log(
-      "[SUCCESS] WhatsApp Authenticated"
-    );
-  }
-);
-
-// READY
-whatsappClient.on(
-
-  "ready",
-
-  () => {
-
-    latestQr = null;
-
-    isWhatsappReady = true;
-
-    console.log(
-      "[SUCCESS] WhatsApp Client Ready"
-    );
-  }
-);
-
-// AUTH FAILURE
-whatsappClient.on(
-
-  "auth_failure",
-
-  (message) => {
-
-    console.log(
-      "[ERROR] WhatsApp Auth Failure"
+        console.log(
+          "[SUCCESS] WhatsApp Authenticated"
+        );
+      }
     );
 
-    console.log(message);
+    // READY
+    whatsappClient.on(
 
-    isWhatsappReady = false;
-  }
-);
+      "ready",
 
-// DISCONNECTED
-whatsappClient.on(
+      () => {
 
-  "disconnected",
+        latestQr = null;
 
-  async (reason) => {
+        isWhatsappReady = true;
 
-    console.log(
-      "[WARNING] WhatsApp Disconnected"
+        console.log(
+          "[SUCCESS] WhatsApp Client Ready"
+        );
+      }
     );
 
-    console.log(reason);
+    // AUTH FAILURE
+    whatsappClient.on(
 
-    isWhatsappReady = false;
+      "auth_failure",
 
-    latestQr = null;
+      (message) => {
 
-    try {
+        console.log(
+          "[ERROR] WhatsApp Auth Failure"
+        );
 
-      console.log(
-        "[INFO] Reinitializing WhatsApp..."
-      );
+        console.log(message);
 
-      await whatsappClient.initialize();
+        isWhatsappReady = false;
+      }
+    );
 
-    } catch (error) {
+    // DISCONNECTED
+    whatsappClient.on(
 
-      console.log(
-        "[ERROR] Failed to Reinitialize WhatsApp"
-      );
+      "disconnected",
 
-      console.log(error);
-    }
-  }
-);
+      async (reason) => {
+
+        console.log(
+          "[WARNING] WhatsApp Disconnected"
+        );
+
+        console.log(reason);
+
+        isWhatsappReady = false;
+
+        latestQr = null;
+      }
+    );
+
+    await whatsappClient.initialize();
+  };

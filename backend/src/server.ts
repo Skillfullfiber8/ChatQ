@@ -81,4 +81,8 @@ console.log(
 registerWhatsappEvents();
 
 // INITIALIZE WHATSAPP
-whatsappClient.initialize();
+import {
+  initializeWhatsapp,
+} from "./modules/whatsapp/client";
+
+initializeWhatsapp();
