@@ -1,23 +1,76 @@
 import {
+
+  Request,
+
+  Response,
+
+} from "express";
+
+import {
   getReviewQueue,
 } from "../reviews/review.store";
 
-export const getDashboardStats = (
-  req: Request,
-  res: Response
-) => {
-  const reviews = getReviewQueue();
+// DASHBOARD STATS
+export const getDashboardStats =
+  async (
+    req: Request,
+    res: Response
+  ) => {
 
-  res.json({
-    pendingReviews: reviews.length,
-    totalChats: 120,
-    aiResolved: 87,
-  });
+    try {
+
+      const reviews =
+        await getReviewQueue();
+
+      res.json({
+
+        pendingReviews:
+          reviews.length,
+
+        totalMessages:
+          120,
+
+        aiResolved:
+          87,
+
+      });
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+
+        message:
+          "Failed to fetch dashboard stats",
+
+      });
+    }
 };
 
-export const getPendingReviews = (
-  req: Request,
-  res: Response
-) => {
-  res.json(getReviewQueue());
+// GET PENDING REVIEWS
+export const getPendingReviews =
+  async (
+    req: Request,
+    res: Response
+  ) => {
+
+    try {
+
+      const reviews =
+        await getReviewQueue();
+
+      res.json(reviews);
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+
+        message:
+          "Failed to fetch reviews",
+
+      });
+    }
 };
