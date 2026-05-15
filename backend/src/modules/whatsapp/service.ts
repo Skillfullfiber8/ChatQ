@@ -1,16 +1,19 @@
-import { Message } from "whatsapp-web.js";
+import { Message }
+from "whatsapp-web.js";
 
-import { generateAIResponse }
-from "../ai/ai.service";
+import {
+  generateAIResponse,
+} from "../ai/ai.service";
 
-import { whatsappClient }
-from "./client";
+import {
+  whatsappClient,
+} from "./client";
 
 import {
   addReviewItem,
 } from "../reviews/review.store";
 
-// Detect if message needs human review
+// REVIEW DETECTION
 const shouldReview =
   (
     message: string
@@ -49,39 +52,70 @@ export const handleIncomingMessage =
 
     try {
 
-
       console.log(
         `MESSAGE RECEIVED: ${msg.body}`
       );
 
-      // Require /ai
+      // SETTINGS
+      const requirePrefix =
+        process.env
+          .REQUIRE_AI_PREFIX ===
+        "true";
+
+      const allowOnlyTestNumber =
+        process.env
+          .ALLOW_ONLY_TEST_NUMBER ===
+        "true";
+
+      const testNumber =
+        process.env
+          .TEST_NUMBER;
+
+      // ONLY TEST NUMBER
       if (
-        !msg.body.startsWith("/ai")
+        allowOnlyTestNumber &&
+        msg.from !== testNumber
       ) {
+
+        console.log(
+          "[INFO] Ignored non-test number"
+        );
+
         return;
       }
 
-      // Remove /ai keyword
+      // REQUIRE /ai
+      if (
+        requirePrefix &&
+        !msg.body.startsWith("/ai")
+      ) {
+
+        return;
+      }
+
+      // CLEAN MESSAGE
       const cleanMessage =
-        msg.body
-          .replace("/ai", "")
-          .trim();
+        requirePrefix
+
+          ? msg.body
+              .replace("/ai", "")
+              .trim()
+
+          : msg.body.trim();
 
       console.log(
         `[INFO] Incoming Message: ${cleanMessage}`
       );
 
-      // Generate AI response
+      // GENERATE AI
       const aiReply =
         await generateAIResponse(
           cleanMessage
         );
 
       console.log(
-        "[DEBUG] AI Reply Generated:"
+        "[DEBUG] AI Reply Generated"
       );
-
-      console.log(aiReply);
 
       // REVIEW FLOW
       if (
@@ -90,52 +124,39 @@ export const handleIncomingMessage =
         )
       ) {
 
-        const reviewItem = {
+        await addReviewItem({
 
-  id:
-    Date.now()
-      .toString(),
+          customer:
+            msg.from,
 
-  customer:
-    msg.from,
+          customerMessage:
+            cleanMessage,
 
-  customerMessage:
-    cleanMessage,
+          suggestedReply:
+            aiReply,
 
-  suggestedReply:
-    aiReply,
+          type:
+            "pricing",
 
-  type:
-    "pricing",
+          status:
+            "pending",
 
-  status:
-    "pending" as const,
-
-  createdAt:
-    new Date(),
-
-};
-
-        addReviewItem(
-          reviewItem
-        );
+        });
 
         console.log(
-          "[DEBUG] Review item added:"
-        );
-
-        console.log(
-          reviewItem
+          "[DEBUG] Review item added"
         );
 
         // DO NOT SEND CUSTOMER MESSAGE
         return;
       }
 
-      // Direct AI reply
+      // SEND DIRECT AI REPLY
       await whatsappClient
         .sendMessage(
+
           msg.from,
+
           aiReply
         );
 
@@ -152,4 +173,4 @@ export const handleIncomingMessage =
       console.log(error);
 
     }
-};
+};  

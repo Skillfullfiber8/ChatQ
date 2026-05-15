@@ -1,120 +1,200 @@
 "use client";
 
-import Link from "next/link";
+import {
+
+  useEffect,
+
+  useState,
+
+} from "react";
+
+import {
+  QRCodeCanvas,
+} from "qrcode.react";
+
+const API_URL =
+  "http://localhost:3000";
 
 export default function HomePage() {
-  return (
-    <main className="min-h-screen bg-[#0f1117] text-white p-8">
-      <div className="max-w-7xl mx-auto">
 
-        {/* Header */}
-        <div className="flex items-center justify-between mb-10">
+  const [
+
+    qr,
+
+    setQr,
+
+  ] = useState<
+    string | null
+  >(null);
+
+  const [
+
+    ready,
+
+    setReady,
+
+  ] = useState(false);
+
+  const fetchStatus =
+    async () => {
+
+      try {
+
+        const response =
+          await fetch(
+            `${API_URL}/status`
+          );
+
+        const data =
+          await response.json();
+
+        setQr(data.qr);
+
+        setReady(data.ready);
+
+      } catch (error) {
+
+        console.log(error);
+      }
+    };
+
+  useEffect(() => {
+
+    fetchStatus();
+
+    const interval =
+      setInterval(
+        fetchStatus,
+        3000
+      );
+
+    return () =>
+      clearInterval(interval);
+
+  }, []);
+
+  return (
+
+    <main
+      className="
+        min-h-screen
+        bg-[#0f1117]
+        text-white
+        p-10
+      "
+    >
+
+      <div
+        className="
+          max-w-5xl
+          mx-auto
+        "
+      >
+
+        <div
+          className="
+            flex
+            justify-between
+            items-center
+            mb-10
+          "
+        >
+
           <div>
-            <h1 className="text-4xl font-bold">
+
+            <h1
+              className="
+                text-5xl
+                font-bold
+              "
+            >
               ChatQ Dashboard
             </h1>
 
-            <p className="text-gray-400 mt-2">
+            <p
+              className="
+                text-gray-400
+                mt-3
+              "
+            >
               AI-powered WhatsApp support system
             </p>
+
           </div>
 
-          <button
-            className="
-              bg-green-600
-              hover:bg-green-700
+          <div
+            className={`
               px-5
               py-3
               rounded-xl
               font-semibold
-            "
+              ${
+                ready
+
+                  ? "bg-green-600"
+
+                  : "bg-yellow-500"
+              }
+            `}
           >
-            WhatsApp Connected
-          </button>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            {
+              ready
 
-          <div className="bg-[#1a1d29] p-6 rounded-2xl">
-            <h2 className="text-gray-400 text-sm">
-              Chats Today
-            </h2>
+                ? "WhatsApp Connected"
 
-            <p className="text-4xl font-bold mt-3">
-              47
-            </p>
-          </div>
+                : "WhatsApp Login Required"
+            }
 
-          <div className="bg-[#1a1d29] p-6 rounded-2xl">
-            <h2 className="text-gray-400 text-sm">
-              Pending Reviews
-            </h2>
-
-            <p className="text-4xl font-bold mt-3 text-yellow-400">
-              12
-            </p>
-          </div>
-
-          <div className="bg-[#1a1d29] p-6 rounded-2xl">
-            <h2 className="text-gray-400 text-sm">
-              AI Resolved
-            </h2>
-
-            <p className="text-4xl font-bold mt-3 text-green-400">
-              83%
-            </p>
           </div>
 
         </div>
 
-        {/* Actions */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          <Link href="/reviews">
-
-            <div
-              className="
-                bg-[#1a1d29]
-                p-8
-                rounded-2xl
-                hover:bg-[#232838]
-                transition
-                cursor-pointer
-              "
-            >
-              <h2 className="text-2xl font-bold mb-3">
-                Review Queue
-              </h2>
-
-              <p className="text-gray-400">
-                Approve AI-generated pricing,
-                courier and payment replies.
-              </p>
-            </div>
-
-          </Link>
+        {!ready && qr && (
 
           <div
             className="
               bg-[#1a1d29]
-              p-8
               rounded-2xl
+              p-10
+              flex
+              flex-col
+              items-center
+              mb-10
             "
           >
-            <h2 className="text-2xl font-bold mb-3">
-              Business Settings
+
+            <h2
+              className="
+                text-3xl
+                font-bold
+                mb-6
+              "
+            >
+              Scan WhatsApp QR
             </h2>
 
-            <p className="text-gray-400">
-              Configure prompts, products,
-              pricing and automation rules.
-            </p>
+            <div
+              className="
+                bg-white
+                p-6
+                rounded-2xl
+              "
+            >
+
+              <QRCodeCanvas
+                  value={qr}
+                  size={300}
+                />
+
+            </div>
+
           </div>
 
-        </div>
+        )}
 
       </div>
+
     </main>
   );
 }

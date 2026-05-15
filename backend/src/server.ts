@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import statusRoutes from "./routes/status.routes";
 
 dotenv.config();
 
@@ -21,6 +22,11 @@ const app = express();
 app.use(cors());
 
 app.use(express.json());
+
+app.use(
+  "/status",
+  statusRoutes
+);
 
 app.use(
   "/reviews",

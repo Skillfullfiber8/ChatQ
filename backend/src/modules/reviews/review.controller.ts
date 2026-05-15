@@ -19,7 +19,7 @@ import {
 
 // GET REVIEWS
 export const getReviews =
-  (
+  async (
     req: Request,
     res: Response
   ) => {
@@ -27,7 +27,7 @@ export const getReviews =
     try {
 
       const reviews =
-        getReviewQueue();
+        await getReviewQueue();
 
       res.json(reviews);
 
@@ -59,7 +59,7 @@ export const approveReview =
       } = req.body;
 
       const review =
-        approveReviewItem(id);
+        await approveReviewItem(id);
 
       if (!review) {
 
@@ -97,7 +97,7 @@ export const approveReview =
 
 // REJECT REVIEW
 export const rejectReview =
-  (
+  async (
     req: Request,
     res: Response
   ) => {
@@ -108,7 +108,7 @@ export const rejectReview =
         req.params.id as string;
 
       const review =
-        rejectReviewItem(id);
+        await rejectReviewItem(id);
 
       if (!review) {
 

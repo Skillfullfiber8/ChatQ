@@ -1,77 +1,96 @@
-export type ReviewItem = {
+import { prisma }
+from "../../lib/prisma";
 
-  id: string;
+// ADD REVIEW
+export const addReviewItem =
+  async (
+    item: {
+      customer: string;
+      customerMessage: string;
+      suggestedReply: string;
+      type: string;
+      status:
+        | "pending"
+        | "approved"
+        | "rejected";
+    }
+  ) => {
 
-  customer: string;
+    return prisma.review.create({
 
-  customerMessage: string;
+      data: {
 
-  suggestedReply: string;
+        customer:
+          item.customer,
 
-  type: string;
+        customerMessage:
+          item.customerMessage,
 
-  status:
-    | "pending"
-    | "approved"
-    | "rejected";
+        suggestedReply:
+          item.suggestedReply,
 
-  createdAt: Date;
+        type:
+          item.type,
+
+        status:
+          item.status,
+
+      },
+
+    });
 };
 
-const reviewQueue:
-  ReviewItem[] = [];
-
-export const addReviewItem = (
-  item: ReviewItem
-) => {
-
-  reviewQueue.unshift(item);
-};
-
+// GET PENDING REVIEWS
 export const getReviewQueue =
-  () => {
+  async () => {
 
-    return reviewQueue.filter(
-      item =>
-        item.status ===
-        "pending"
-    );
+    return prisma.review.findMany({
+
+      where: {
+        status:
+          "pending",
+      },
+
+      orderBy: {
+        createdAt:
+          "desc",
+      },
+
+    });
 };
 
+// APPROVE REVIEW
 export const approveReviewItem =
-  (id: string) => {
+  async (
+    id: string
+  ) => {
 
-    const item =
-      reviewQueue.find(
-        review =>
-          review.id === id
-      );
+    return prisma.review.update({
 
-    if (!item) {
-      return null;
-    }
+      where: { id },
 
-    item.status =
-      "approved";
+      data: {
+        status:
+          "approved",
+      },
 
-    return item;
+    });
 };
 
+// REJECT REVIEW
 export const rejectReviewItem =
-  (id: string) => {
+  async (
+    id: string
+  ) => {
 
-    const item =
-      reviewQueue.find(
-        review =>
-          review.id === id
-      );
+    return prisma.review.update({
 
-    if (!item) {
-      return null;
-    }
+      where: { id },
 
-    item.status =
-      "rejected";
+      data: {
+        status:
+          "rejected",
+      },
 
-    return item;
+    });
 };
