@@ -1,13 +1,12 @@
-import { openRouterClient } from "./provider";
-
-import { businessContext } from "../business/business.data";
+import { openrouter } from "./provider";
 
 import {
-  addMessage,
-  getConversation,
-} from "../conversations/conversation.store";
-
-import { logger } from "../../utils/logger";
+  BUSINESS_INFO,
+  PRODUCTS,
+  PAYMENT_INFO,
+  SHIPPING_INFO,
+  AMAZON_INFO,
+} from "../business/business.data";
 
 const MODELS = [
 
@@ -19,72 +18,140 @@ const MODELS = [
   
 ];
 
-export const generateAIResponse = async (
-  userId: string,
-  userMessage: string
-): Promise<string> => {
-  try {
-    addMessage(userId, {
-      role: "user",
-      content: userMessage,
-    });
+// Retrieve relevant product chunks
+const retrieveContext = (
+  message: string
+) => {
 
-    const history = getConversation(userId);
+  const lower =
+    message.toLowerCase();
+
+  let matchedProducts =
+    PRODUCTS.filter(product =>
+
+      product.keywords.some(
+        keyword =>
+          lower.includes(keyword)
+      )
+    );
+
+  // If asking general product details
+  if (
+    lower.includes("products") ||
+    lower.includes("details") ||
+    lower.includes("what do you sell")
+  ) {
+
+    matchedProducts =
+      PRODUCTS;
+  }
+
+  const productText =
+    matchedProducts
+      .map(p => p.content)
+      .join("\n\n---\n\n");
+
+  return `
+
+${BUSINESS_INFO}
+
+${productText}
+
+${PAYMENT_INFO}
+
+${SHIPPING_INFO}
+
+${AMAZON_INFO}
+
+`;
+};
+
+export const generateAIResponse =
+  async (
+    message: string
+  ) => {
+
+    const context =
+      retrieveContext(message);
 
     for (const model of MODELS) {
+
       try {
-        logger.info(
-          `Trying model: ${model}`
+
+        console.log(
+          `[INFO] Trying model: ${model}`
         );
 
         const completion =
-          await openRouterClient.chat.completions.create({
+          await openrouter.chat.completions.create({
+
             model,
 
             messages: [
+
               {
                 role: "system",
-                content: businessContext,
+
+                content: `
+You are Lifessenz customer support.
+
+STRICT RULES:
+- ONLY answer using provided context
+- NEVER invent products
+- NEVER invent supplements
+- NEVER invent pricing
+- NEVER invent courier charges
+- NEVER make medical cure claims
+- If information is unavailable, say:
+  "Our support team will assist you shortly."
+- Keep replies concise and professional
+                `,
               },
 
-              ...history,
+              {
+                role: "user",
+
+                content: `
+BUSINESS CONTEXT:
+
+${context}
+
+CUSTOMER MESSAGE:
+${message}
+
+Answer ONLY using the business context.
+                `,
+              },
+
             ],
 
-            temperature: 0.7,
-
-            max_tokens: 200,
           });
 
-        const aiReply =
-          completion.choices[0].message.content;
+        const reply =
+          completion
+            .choices?.[0]
+            ?.message?.content;
 
-        if (!aiReply) {
-          continue;
+        if (reply) {
+
+          console.log(
+            `[SUCCESS] Model Success: ${model}`
+          );
+
+          return reply;
         }
 
-        addMessage(userId, {
-          role: "assistant",
-          content: aiReply,
-        });
+      } catch (error) {
 
-        logger.success(
-          `Model Success: ${model}`
+        console.log(
+          `[ERROR] Model Failed: ${model}`
         );
 
-        return aiReply;
-      } catch (modelError) {
-        logger.warn(
-          `Model Failed: ${model}`
-        );
-
-        console.error(modelError);
       }
+
     }
 
-    return "Sorry, all AI services are busy right now.";
-  } catch (error) {
-    logger.error("AI Error:", error);
-
-    return "Something went wrong.";
-  }
+    return (
+      "Sorry, our support team will assist you shortly."
+    );
 };

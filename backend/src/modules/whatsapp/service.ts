@@ -1,95 +1,155 @@
 import { Message } from "whatsapp-web.js";
 
-import { generateAIResponse } from "../ai/ai.service";
+import { generateAIResponse }
+from "../ai/ai.service";
 
-import { whatsappClient } from "./client";
-
-import { logger } from "../../utils/logger";
+import { whatsappClient }
+from "./client";
 
 import {
-  clearConversation,
-} from "../conversations/conversation.store";
+  addReviewItem,
+} from "../reviews/review.store";
 
-const TEST_NUMBER = "919786210101@c.us";
+// Detect if message needs human review
+const shouldReview =
+  (
+    message: string
+  ) => {
 
-export const handleIncomingMessage = async (
-  msg: Message
-) => {
-  try {
-    // Ignore empty messages
-    if (!msg.body) {
-      return;
-    }
+    const lower =
+      message.toLowerCase();
 
-    // Ignore group chats
-    if (msg.from.includes("@g.us")) {
-      return;
-    }
+    return (
 
-    // Only allow your number
-    if (msg.from !== TEST_NUMBER) {
-      return;
-    }
+      lower.includes("price") ||
 
-    // Ignore bot's own outgoing replies
-    // but allow your /ai messages
-    if (
-      msg.fromMe &&
-      !msg.body.startsWith("/ai")
-    ) {
-      return;
-    }
+      lower.includes("cost") ||
 
-    // Reset memory command
-    if (msg.body === "/reset") {
-      clearConversation(msg.from);
+      lower.includes("courier") ||
 
-      await whatsappClient.sendMessage(
-        msg.from,
-        "Conversation memory cleared ✅"
+      lower.includes("delivery") ||
+
+      lower.includes("order") ||
+
+      lower.includes("buy") ||
+
+      lower.includes("payment") ||
+
+      lower.includes("need") ||
+
+      /\d/.test(lower)
+
+    );
+};
+
+export const handleIncomingMessage =
+  async (
+    msg: Message
+  ) => {
+
+    try {
+
+
+      console.log(
+        `MESSAGE RECEIVED: ${msg.body}`
       );
 
-      return;
+      // Require /ai
+      if (
+        !msg.body.startsWith("/ai")
+      ) {
+        return;
+      }
+
+      // Remove /ai keyword
+      const cleanMessage =
+        msg.body
+          .replace("/ai", "")
+          .trim();
+
+      console.log(
+        `[INFO] Incoming Message: ${cleanMessage}`
+      );
+
+      // Generate AI response
+      const aiReply =
+        await generateAIResponse(
+          cleanMessage
+        );
+
+      console.log(
+        "[DEBUG] AI Reply Generated:"
+      );
+
+      console.log(aiReply);
+
+      // REVIEW FLOW
+      if (
+        shouldReview(
+          cleanMessage
+        )
+      ) {
+
+        const reviewItem = {
+
+  id:
+    Date.now()
+      .toString(),
+
+  customer:
+    msg.from,
+
+  customerMessage:
+    cleanMessage,
+
+  suggestedReply:
+    aiReply,
+
+  type:
+    "pricing",
+
+  status:
+    "pending" as const,
+
+  createdAt:
+    new Date(),
+
+};
+
+        addReviewItem(
+          reviewItem
+        );
+
+        console.log(
+          "[DEBUG] Review item added:"
+        );
+
+        console.log(
+          reviewItem
+        );
+
+        // DO NOT SEND CUSTOMER MESSAGE
+        return;
+      }
+
+      // Direct AI reply
+      await whatsappClient
+        .sendMessage(
+          msg.from,
+          aiReply
+        );
+
+      console.log(
+        `[INFO] AI Reply Sent To: ${msg.from}`
+      );
+
+    } catch (error) {
+
+      console.log(
+        "[ERROR] WhatsApp Service Error"
+      );
+
+      console.log(error);
+
     }
-
-    // Require /ai command
-    if (!msg.body.startsWith("/ai")) {
-      return;
-    }
-
-    // Clean message
-    const cleanMessage = msg.body
-      .replace("/ai", "")
-      .trim();
-
-    logger.info(
-      `Incoming Message: ${cleanMessage}`
-    );
-
-    // Typing indicator
-    const chat = await msg.getChat();
-
-    await chat.sendStateTyping();
-
-    // Generate AI reply
-    const aiReply = await generateAIResponse(
-      msg.from,
-      cleanMessage
-    );
-
-    // Send message
-    await whatsappClient.sendMessage(
-      msg.from,
-      aiReply
-    );
-
-    logger.info(
-      `AI Reply Sent To: ${msg.from}`
-    );
-  } catch (error) {
-    logger.error(
-      "Message Handling Error:",
-      error
-    );
-  }
 };

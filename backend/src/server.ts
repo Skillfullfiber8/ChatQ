@@ -1,24 +1,48 @@
-import app from "./app";
-import { config } from "./config";
-import { logger } from "./utils/logger";
+import dotenv from "dotenv";
 
-import { whatsappClient } from "./modules/whatsapp/client";
-import { registerWhatsappEvents } from "./modules/whatsapp/events";
+dotenv.config();
 
-const startServer = async () => {
-  try {
-    registerWhatsappEvents();
+import express from "express";
+import cors from "cors";
 
-    whatsappClient.initialize();
+import reviewRoutes
+from "./modules/reviews/review.routes";
 
-    app.listen(config.port, () => {
-      logger.info(
-        `Server running on port ${config.port}`
-      );
-    });
-  } catch (error) {
-    logger.error("Server Startup Error:", error);
+import {
+  whatsappClient,
+} from "./modules/whatsapp/client";
+
+import {
+  registerWhatsappEvents,
+} from "./modules/whatsapp/events";
+
+const app = express();
+
+app.use(cors());
+
+app.use(express.json());
+
+app.use(
+  "/reviews",
+  reviewRoutes
+);
+
+const PORT =
+  process.env.PORT || 3000;
+
+app.listen(
+  PORT,
+
+  () => {
+
+    console.log(
+      `[INFO] Server running on port ${PORT}`
+    );
   }
-};
+);
 
-startServer();
+// REGISTER EVENTS
+registerWhatsappEvents();
+
+// INITIALIZE CLIENT
+whatsappClient.initialize();

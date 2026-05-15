@@ -5,50 +5,61 @@ import {
   LocalAuth,
 } from "whatsapp-web.js";
 
-import { logger } from "../../utils/logger";
+export const whatsappClient =
+  new Client({
 
-export const whatsappClient = new Client({
-  authStrategy: new LocalAuth(),
+    authStrategy:
+      new LocalAuth(),
 
-  puppeteer: {
-    headless: true,
+    puppeteer: {
 
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-accelerated-2d-canvas",
-      "--no-first-run",
-      "--no-zygote",
-      "--disable-gpu",
-    ],
-  },
+      headless: true,
 
-  webVersionCache: {
-    type: "none",
-  },
-});
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+      ],
 
-whatsappClient.on("qr", (qr) => {
-  logger.info("Scan QR Code Below:");
+    },
 
-  qrcode.generate(qr, {
-    small: true,
   });
-});
 
-whatsappClient.on("ready", () => {
-  logger.success("WhatsApp Client Ready");
-});
+whatsappClient.on(
+  "qr",
 
-whatsappClient.on("authenticated", () => {
-  logger.success("WhatsApp Authenticated");
-});
+  (qr) => {
 
-whatsappClient.on("auth_failure", (msg) => {
-  logger.error("Auth Failure:", msg);
-});
+    console.log(
+      "[INFO] Scan QR Code Below:"
+    );
 
-whatsappClient.on("disconnected", (reason) => {
-  logger.warn("WhatsApp Disconnected:", reason);
-});
+    qrcode.generate(
+      qr,
+      {
+        small: true,
+      }
+    );
+  }
+);
+
+whatsappClient.on(
+  "authenticated",
+
+  () => {
+
+    console.log(
+      "[SUCCESS] WhatsApp Authenticated"
+    );
+  }
+);
+
+whatsappClient.on(
+  "ready",
+
+  () => {
+
+    console.log(
+      "[SUCCESS] WhatsApp Client Ready"
+    );
+  }
+);
