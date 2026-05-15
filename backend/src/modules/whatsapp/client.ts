@@ -12,7 +12,7 @@ import {
 export let latestQr:
   string | null = null;
 
-// WhatsApp status
+// WhatsApp Ready Status
 export let isWhatsappReady =
   false;
 
@@ -32,6 +32,10 @@ export const whatsappClient =
         "--no-sandbox",
 
         "--disable-setuid-sandbox",
+
+        "--disable-dev-shm-usage",
+
+        "--disable-gpu",
 
       ],
 
