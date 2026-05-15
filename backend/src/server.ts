@@ -1,13 +1,19 @@
-import dotenv from "dotenv";
-import statusRoutes from "./routes/status.routes";
+import "dotenv/config";
 
-dotenv.config();
+import express
+from "express";
 
-import express from "express";
-import cors from "cors";
+import cors
+from "cors";
 
 import reviewRoutes
 from "./modules/reviews/review.routes";
+
+import dashboardRoutes
+from "./modules/dashboard/dashboard.routes";
+
+import statusRoutes
+from "./routes/status.routes";
 
 import {
   whatsappClient,
@@ -17,25 +23,45 @@ import {
   registerWhatsappEvents,
 } from "./modules/whatsapp/events";
 
-const app = express();
+const app =
+  express();
 
-app.use(cors());
+// CORS
+app.use(
 
-app.use(express.json());
+  cors({
+
+    origin: "*",
+
+  })
+);
+
+// BODY PARSER
+app.use(
+  express.json()
+);
+
+// ROUTES
+app.use(
+  "/reviews",
+  reviewRoutes
+);
+
+app.use(
+  "/dashboard",
+  dashboardRoutes
+);
 
 app.use(
   "/status",
   statusRoutes
 );
 
-app.use(
-  "/reviews",
-  reviewRoutes
-);
-
+// PORT
 const PORT =
   process.env.PORT || 3000;
 
+// START SERVER
 app.listen(
   PORT,
 
@@ -47,8 +73,12 @@ app.listen(
   }
 );
 
-// REGISTER EVENTS
+// REGISTER WHATSAPP EVENTS
+console.log(
+  "[INFO] Registering WhatsApp Events"
+);
+
 registerWhatsappEvents();
 
-// INITIALIZE CLIENT
+// INITIALIZE WHATSAPP
 whatsappClient.initialize();

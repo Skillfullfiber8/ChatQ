@@ -10,4 +10,6 @@ backend/.wwebjs_cache
 dist
 build
 
+frontend/.env.local
+
 *.log

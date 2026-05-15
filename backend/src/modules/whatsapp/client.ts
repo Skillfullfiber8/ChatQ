@@ -1,5 +1,8 @@
 import qrcode from "qrcode-terminal";
 
+import puppeteer
+from "puppeteer";
+
 import {
 
   Client,
@@ -12,7 +15,7 @@ import {
 export let latestQr:
   string | null = null;
 
-// WhatsApp Ready Status
+// WhatsApp Status
 export let isWhatsappReady =
   false;
 
@@ -24,6 +27,12 @@ export const whatsappClient =
       new LocalAuth(),
 
     puppeteer: {
+
+      browserWSEndpoint:
+        undefined,
+
+      executablePath:
+        puppeteer.executablePath(),
 
       headless: true,
 
