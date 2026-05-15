@@ -16,11 +16,15 @@ import statusRoutes
 from "./routes/status.routes";
 
 import {
-  whatsappClient,
+
+  initializeWhatsapp,
+
 } from "./modules/whatsapp/client";
 
 import {
+
   registerWhatsappEvents,
+
 } from "./modules/whatsapp/events";
 
 const app =
@@ -63,6 +67,7 @@ const PORT =
 
 // START SERVER
 app.listen(
+
   PORT,
 
   () => {
@@ -73,16 +78,32 @@ app.listen(
   }
 );
 
-// REGISTER WHATSAPP EVENTS
-console.log(
-  "[INFO] Registering WhatsApp Events"
-);
-
-registerWhatsappEvents();
-
 // INITIALIZE WHATSAPP
-import {
-  initializeWhatsapp,
-} from "./modules/whatsapp/client";
+const startWhatsapp =
+  async () => {
 
-initializeWhatsapp();
+    try {
+
+      console.log(
+        "[INFO] Initializing WhatsApp"
+      );
+
+      await initializeWhatsapp();
+
+      console.log(
+        "[INFO] Registering WhatsApp Events"
+      );
+
+      registerWhatsappEvents();
+
+    } catch (error) {
+
+      console.log(
+        "[ERROR] Failed to Initialize WhatsApp"
+      );
+
+      console.log(error);
+    }
+  };
+
+startWhatsapp();
