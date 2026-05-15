@@ -1,34 +1,60 @@
 {
   "name": "chatq",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "main": "dist/server.js",
   "scripts": {
+
     "dev": "nodemon",
+
     "build": "tsc",
-    "start": "node dist/server.js"
+
+    "start": "node dist/server.js",
+
+    "postinstall": "npx puppeteer browsers install chrome"
+
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "description": "",
+
   "dependencies": {
+
     "@prisma/client": "^6.9.0",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "openai": "^6.37.0",
-    "prisma": "^6.9.0",
+
+    "axios": "^1.9.0",
+
+    "cors": "^2.8.5",
+
+    "dotenv": "^17.0.0",
+
+    "express": "^5.1.0",
+
+    "openai": "^5.1.0",
+
     "qrcode-terminal": "^0.12.0",
-    "whatsapp-web.js": "^1.34.7"
+
+    "whatsapp-web.js": "^1.31.0"
+
   },
+
   "devDependencies": {
+
     "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "@types/node": "^25.7.0",
+
+    "@types/express": "^5.0.3",
+
+    "@types/node": "^24.0.1",
+
     "@types/qrcode-terminal": "^0.12.2",
-    "nodemon": "^3.1.14",
+
+    "nodemon": "^3.1.10",
+
+    "prisma": "^6.9.0",
+
     "ts-node": "^10.9.2",
-    "typescript": "^6.0.3"
+
+    "typescript": "^5.8.3"
+
   }
 }
